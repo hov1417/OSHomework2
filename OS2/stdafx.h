@@ -12,6 +12,6 @@
 #include <stdio.h>
 #include <tchar.h>
 #include "LinkedList.h"
-#include "LinkedList.cpp"
+#include "utilities.h"
 
 

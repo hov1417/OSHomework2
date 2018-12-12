@@ -1,67 +1,49 @@
 #include "StdAfx.h"
 #include "LinkedList.h"
 
-
-template<typename T>
-LinkedList<T>::LinkedList(void)
+LinkedList::LinkedList(void)
 {
-	this->addMutex = CreateMutex(NULL, FALSE, NULL);
-	
 	this->firstNode = nullptr;
 	this->lastNode = nullptr;
-    if (this->addMutex == NULL) 
-    {
-        printf("CreateMutex error: %d\n", GetLastError());
-        return;
-    }
+	
+	this->addMutex = CreateSimpleMutex_s();
+	this->findMutex = CreateSimpleMutex_s();
+	this->deleteMutex = CreateSimpleMutex_s();
 }
 
-template<typename T>
-void LinkedList<T>::addElement(T element) {
-	DWORD waitResult = WaitForSingleObject(this->addMutex, INFINITE);
+void LinkedList::addElement(int element) {
+	WaitForMutex_s(this->addMutex);
 
-	switch (waitResult) 
-    {
-        case WAIT_OBJECT_0: 
-			if (this->firstNode == nullptr)
-			{
-				this->firstNode = this->lastNode = new Node<T>(nullptr, element);
-			}
-			else 
-			{
-				Node<T>* newNode = new Node<T>(nullptr, element);
-				this->lastNode->next = newNode;
-				this->lastNode = newNode;
-			}
+	if (this->firstNode == nullptr)
+	{
+		this->firstNode = this->lastNode = new Node(nullptr, element);
+	}
+	else 
+	{
+		Node* newNode = new Node(nullptr, element);
+		this->lastNode->next = newNode;
+		this->lastNode = newNode;
+	}
+	
+	ReleaseMutex_s(this->addMutex);
+}
 
-			if (! ReleaseMutex(this->addMutex)) 
-            {
-				printf("ReleaseMutex error: %d\n", GetLastError());
-				return;
-            } 
-
-            break; 
-        case WAIT_ABANDONED: 
-        case WAIT_TIMEOUT:
-			printf("WAIT_ABANDONED | WAIT_TIMEOUT error: %d\n", GetLastError());
-            return; 
-    }
+void LinkedList::removeElement(int element) {
 
 }
 
-template<typename T>
-void LinkedList<T>::removeElement(T element) {
-
-}
-
-template<typename T>
-Node<T>* LinkedList<T>::findElement(T element) {
+Node* LinkedList::findElement(int element) {
+	Node* current = this->firstNode;
+	while(current) {
+		if (current->value == element)
+			return current;
+		current = current->next;
+	}
 	return nullptr;
 }
 
-template<typename T>
-void LinkedList<T>::printAll() {
-	Node<T>* current = this->firstNode;
+void LinkedList::printAll() {
+	Node* current = this->firstNode;
 	while(current) {
 		_tprintf(_T("%d "), current->value);
 		current = current->next;
@@ -69,8 +51,10 @@ void LinkedList<T>::printAll() {
 	_tprintf(_T("\n"));
 }
 
-template<typename T>
-LinkedList<T>::~LinkedList(void)
+LinkedList::~LinkedList(void)
 {
 	delete this->firstNode;
+	CloseHandle_s(this->addMutex);
+	CloseHandle_s(this->findMutex);
+	CloseHandle_s(this->deleteMutex);
 }

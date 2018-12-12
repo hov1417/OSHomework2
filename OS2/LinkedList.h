@@ -1,12 +1,11 @@
 #pragma once
 
-template<typename T>
 class Node 
 {
 public:
 	Node* next;
-	T value;
-	Node(Node* next, T value) {
+	int value;
+	Node(Node* next, int value) {
 		this->next = next;
 		this->value = value;
 	}
@@ -15,19 +14,20 @@ public:
 	}
 };
 
-template<typename T>
 class LinkedList
 {
 public:
-	void addElement(T element);
-	void removeElement(T element);
-	Node<T>* findElement(T element);
+	void addElement(int element);
+	void removeElement(int element);
+	Node* findElement(int element);
 	void printAll();
 	LinkedList(void);
 	~LinkedList(void);
 private:
 	HANDLE addMutex;
-	Node<T>* firstNode;
-	Node<T>* lastNode;
+	HANDLE findMutex;
+	HANDLE deleteMutex;
+	Node* firstNode;
+	Node* lastNode;
 };
 
