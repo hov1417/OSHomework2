@@ -1,21 +1,19 @@
 #pragma once
 
+#include "stdafx.h"
+
+template<class T, size_t N>
+const size_t size(T (&)[N]) { return N; }
+
 void ErrorExit();
 
 HANDLE CreateSimpleMutex_s();
 
-void WaitForMutex_s(HANDLE mutex);
+// mutex or event
+void WaitForObject_s(HANDLE obj);
 
-#define CloseHandle_s(handle) \
-	if(!CloseHandle(handle)) {\
-		_tprintf(_T("CloseHandle error:\n"));\
-		ErrorExit();\
-	}
+void CloseHandle_s(HANDLE handle);
 
+void ReleaseMutex_s(HANDLE handle);
 
-#define ReleaseMutex_s(handle) \
-	if (!ReleaseMutex(this->addMutex)) {\
-		printf("ReleaseMutex error:\n");\
-        ErrorExit();\
-    }
-
+HANDLE CreateSimpleThread_s(LPTHREAD_START_ROUTINE function, LPVOID args);
