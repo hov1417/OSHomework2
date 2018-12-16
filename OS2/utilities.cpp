@@ -15,10 +15,11 @@ void ErrorExit()
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR) &lpMsgBuf,
         0, NULL );
-        
+
     LocalFree(lpMsgBuf);
     ExitProcess(dw); 
 }
+
 
 HANDLE CreateSimpleMutex_s()
 {
@@ -31,6 +32,7 @@ HANDLE CreateSimpleMutex_s()
     return mutex;
 }
 
+
 void WaitForObject_s(HANDLE obj) 
 {
     DWORD waitResult = WaitForSingleObject(obj, INFINITE);
@@ -41,9 +43,11 @@ void WaitForObject_s(HANDLE obj)
     }
 }
 
+
 void CloseHandle_s(HANDLE handle) 
 {
-    if(!CloseHandle(handle)) {
+    if(!CloseHandle(handle))
+    {
         _tprintf(_T("CloseHandle error:\n"));
         ErrorExit();
     }
@@ -52,13 +56,14 @@ void CloseHandle_s(HANDLE handle)
 
 void ReleaseMutex_s(HANDLE handle) 
 {
-    if (!ReleaseMutex(handle)) {
+    if (!ReleaseMutex(handle))
+    {
         printf("ReleaseMutex error:\n");
         ErrorExit();
     }
 }
-    
- 
+
+
 HANDLE CreateSimpleThread_s(LPTHREAD_START_ROUTINE function, LPVOID args)
 {
     HANDLE handle = CreateThread(NULL, 0, function, args, 0, NULL);
@@ -68,4 +73,46 @@ HANDLE CreateSimpleThread_s(LPTHREAD_START_ROUTINE function, LPVOID args)
         ErrorExit();
     }
     return handle;
+}
+
+
+void WaitForObjects_s(int size, HANDLE handles[])
+{
+    DWORD waitRes = WaitForMultipleObjects(size, handles, true, INFINITE);
+
+    if (waitRes != WAIT_OBJECT_0)
+    {
+        printf("WAIT_ABANDONED | WAIT_TIMEOUT | WAIT_FAILED error:\n");
+        ErrorExit();
+    }
+}
+
+HANDLE CreateSimpleEvent_s() 
+{
+    HANDLE _event = CreateEvent(NULL, TRUE, FALSE, NULL); 
+
+    if (_event == NULL) 
+    { 
+        _tprintf(_T("CreateEvent failed:\n"));
+        ErrorExit();
+    }
+    return _event;
+}
+
+void ResetEvent_s(HANDLE handle)
+{
+    if(!ResetEvent(handle))
+    {
+        printf("ResetEvent error:\n");
+        ErrorExit();
+    }
+}
+
+void SetEvent_s(HANDLE handle)
+{
+    if (!SetEvent(handle)) 
+    {
+        printf("SetEvent failed:\n");
+        ErrorExit();
+    }
 }

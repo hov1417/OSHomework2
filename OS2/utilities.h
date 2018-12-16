@@ -2,8 +2,8 @@
 
 #include "stdafx.h"
 
-template<class T, size_t N>
-const size_t size(T (&)[N]) { return N; }
+template<class T, size_t n>
+const size_t size(T (&)[n]) { return n; }
 
 void ErrorExit();
 
@@ -17,3 +17,12 @@ void CloseHandle_s(HANDLE handle);
 void ReleaseMutex_s(HANDLE handle);
 
 HANDLE CreateSimpleThread_s(LPTHREAD_START_ROUTINE function, LPVOID args);
+
+void WaitForObjects_s(int size, HANDLE handles[]);
+
+HANDLE CreateSimpleEvent_s();
+
+void ResetEvent_s(HANDLE handle);
+
+void SetEvent_s(HANDLE handle);
+

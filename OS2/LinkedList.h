@@ -20,25 +20,23 @@ class LinkedList
 {
 public:
     void addElement(int element);
-    void removeElement(int element);
+    bool removeElement(int element);
     Node* findElement(int element);
     void printAll();
     LinkedList(void);
     ~LinkedList(void);
 private:
-    HANDLE addMutex;
-    HANDLE findMutex;
-    HANDLE deleteMutex;
+    HANDLE changeMutex;
     HANDLE counterMutex;
     HANDLE noFindEvent;
 
     Node* firstNode;
     Node* lastNode;
-    
+
     int findCount;
     void incrementFindCount();
     void decrementFindCount();
 
-    void delElement(int element);
+    bool delElement(int element);
 };
 

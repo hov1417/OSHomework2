@@ -8,23 +8,15 @@ LinkedList::LinkedList(void)
 
     this->firstNode = nullptr;
     this->lastNode = nullptr;
-    
-    this->addMutex = CreateSimpleMutex_s();
-    this->findMutex = CreateSimpleMutex_s();
-    this->deleteMutex = CreateSimpleMutex_s();
+
+    this->changeMutex = CreateSimpleMutex_s();
     this->counterMutex = CreateSimpleMutex_s();
-    this->noFindEvent = CreateEvent(NULL, TRUE, FALSE, NULL); 
-        
-    if (this->noFindEvent == NULL) 
-    { 
-        _tprintf(_T("CreateEvent failed:\n"));
-        ErrorExit();
-    }
+    this->noFindEvent = CreateSimpleEvent_s();
 }
 
 void LinkedList::addElement(int element)
 {
-    WaitForObject_s(this->addMutex);
+    WaitForObject_s(this->changeMutex);
 
     if (this->firstNode == nullptr)
     {
@@ -36,43 +28,61 @@ void LinkedList::addElement(int element)
         this->lastNode->next = newNode;
         this->lastNode = newNode;
     }
-    
-    ReleaseMutex_s(this->addMutex);
+
+    ReleaseMutex_s(this->changeMutex);
 }
 
-void LinkedList::removeElement(int element)
+bool LinkedList::removeElement(int element)
 {
+    WaitForObject_s(this->changeMutex);
+
     WaitForObject_s(this->counterMutex);
+
     if (this->findCount == 0)
     {
-        this->delElement(element);
-        ReleaseMutex_s(this->counterMutex);
-        return;
-    }
-    ReleaseMutex_s(this->counterMutex);
-    HANDLE handles[2] = { this->noFindEvent, this->counterMutex };
+        bool res = this->delElement(element);
 
-    DWORD res = WaitForMultipleObjects(2, handles, true, INFINITE);
-    if (res != WAIT_OBJECT_0)
-    {
-        printf("WAIT_ABANDONED | WAIT_TIMEOUT | WAIT_FAILED error:\n");
-        ErrorExit();
+        ReleaseMutex_s(this->counterMutex);
+        ReleaseMutex_s(this->changeMutex);    
+
+        return res;
     }
-    this->delElement(element);
+
     ReleaseMutex_s(this->counterMutex);
-    if(!ResetEvent(this->noFindEvent))
-    {
-        printf("ResetEvent error:\n");
-        ErrorExit();
-    }
+
+    HANDLE handles[] = {this->noFindEvent, this->counterMutex};
+    WaitForObjects_s(size(handles), handles);
+
+    bool res = this->delElement(element);
+
+    ResetEvent_s(this->noFindEvent);
+    ReleaseMutex_s(this->counterMutex);
+
+    ReleaseMutex_s(this->changeMutex);
+
+    return res;
 }
 
 
-void LinkedList::delElement(int element) 
+bool LinkedList::delElement(int element) 
 {
     Node* current = this->firstNode;
+
     if (!current)
-        return;
+        return false;
+
+    if (current->value == element)
+    {
+        this->firstNode = current->next;
+
+        if(current == this->lastNode)
+            this->lastNode = nullptr; 
+
+        current->next = nullptr;
+        delete current;
+        return true;
+    }
+
     while(current->next)
     {
         if (current->next->value == element)
@@ -80,10 +90,19 @@ void LinkedList::delElement(int element)
             Node * toDelete = current->next;
             current->next = toDelete->next;
             toDelete->next = nullptr;
+
+            if(toDelete == this->lastNode)
+                this->lastNode = current;
+
             delete toDelete;
+            return true;
         }
-        current = current->next;
+        else
+        {
+            current = current->next;
+        }
     }
+    return false;
 }
 
 
@@ -94,7 +113,10 @@ Node* LinkedList::findElement(int element)
     while(current)
     {
         if (current->value == element)
+        {
+            this->decrementFindCount();
             return current;
+        }
         current = current->next;
     }
     this->decrementFindCount();
@@ -126,19 +148,13 @@ void LinkedList::decrementFindCount()
 
     if(this->findCount <= 0)
     {
-        _tprintf(_T("FindCount is 0"));
+        _tprintf(_T("FindCount is 0\n"));
         ExitProcess(-1);
     }
     this->findCount --;
 
     if (this->findCount == 0)
-    {
-        if (! SetEvent(this->noFindEvent)) 
-        {
-            printf("SetEvent failed:\n");
-            ErrorExit();
-        }
-    }
+        SetEvent_s(this->noFindEvent);
     ReleaseMutex_s(this->counterMutex);
 }
 
@@ -147,9 +163,7 @@ LinkedList::~LinkedList(void)
 {
     delete this->firstNode;
 
-    CloseHandle_s(this->addMutex);
-    CloseHandle_s(this->findMutex);
-    CloseHandle_s(this->deleteMutex);
+    CloseHandle_s(this->changeMutex);
     CloseHandle_s(this->counterMutex);
     CloseHandle_s(this->noFindEvent);
 }
