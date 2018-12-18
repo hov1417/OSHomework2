@@ -12,12 +12,12 @@ void ErrorExit()
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
         dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
         (LPTSTR) &lpMsgBuf,
         0, NULL );
 
     LocalFree(lpMsgBuf);
-    ExitProcess(dw); 
+    ExitProcess(1); // for collecting statistics, BatchRun.cmd
 }
 
 

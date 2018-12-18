@@ -22,7 +22,7 @@ public:
     void addElement(int element);
     bool removeElement(int element);
     Node* findElement(int element);
-    void printAll();
+    void printAll(); // just for tests
     LinkedList(void);
     ~LinkedList(void);
 private:

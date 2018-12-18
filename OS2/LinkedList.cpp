@@ -2,6 +2,7 @@
 #include "LinkedList.h"
 #include "utilities.h"
 
+
 LinkedList::LinkedList(void)
 {
     this->findCount = 0;
@@ -13,6 +14,7 @@ LinkedList::LinkedList(void)
     this->counterMutex = CreateSimpleMutex_s();
     this->noFindEvent = CreateSimpleEvent_s();
 }
+
 
 void LinkedList::addElement(int element)
 {
@@ -31,6 +33,7 @@ void LinkedList::addElement(int element)
 
     ReleaseMutex_s(this->changeMutex);
 }
+
 
 bool LinkedList::removeElement(int element)
 {
@@ -52,10 +55,13 @@ bool LinkedList::removeElement(int element)
 
     HANDLE handles[] = {this->noFindEvent, this->counterMutex};
     WaitForObjects_s(size(handles), handles);
+    if(this->findCount)
+        ExitProcess(1); // for collecting statistics, BatchRun.cmd
 
     bool res = this->delElement(element);
 
     ResetEvent_s(this->noFindEvent);
+
     ReleaseMutex_s(this->counterMutex);
 
     ReleaseMutex_s(this->changeMutex);
@@ -123,6 +129,7 @@ Node* LinkedList::findElement(int element)
     return nullptr;
 }
 
+
 void LinkedList::printAll()
 {
     Node* current = this->firstNode;
@@ -138,9 +145,11 @@ void LinkedList::printAll()
 void LinkedList::incrementFindCount()
 {
     WaitForObject_s(this->counterMutex);
+    ResetEvent_s(this->noFindEvent);
     this->findCount ++;
     ReleaseMutex_s(this->counterMutex);
 }
+
 
 void LinkedList::decrementFindCount()
 {
@@ -149,7 +158,7 @@ void LinkedList::decrementFindCount()
     if(this->findCount <= 0)
     {
         _tprintf(_T("FindCount is 0\n"));
-        ExitProcess(-1);
+        ExitProcess(1);
     }
     this->findCount --;
 
