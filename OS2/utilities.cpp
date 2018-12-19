@@ -15,7 +15,8 @@ void ErrorExit()
         MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
         (LPTSTR) &lpMsgBuf,
         0, NULL );
-
+    
+	_tprintf(_T("%s\n"), lpMsgBuf);
     LocalFree(lpMsgBuf);
     ExitProcess(1); // for collecting statistics, BatchRun.cmd
 }
